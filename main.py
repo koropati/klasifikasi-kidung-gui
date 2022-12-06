@@ -1,54 +1,46 @@
 from gui.gui import MyGUI, MySettingGUI
 import csv
+import pandas as pd
+
 splitDuration = 0
 shiftDistance = 0
 dbTreshold = 0
 inputModel = ""
 
 def readSettingValue(csvSetting):
-    splitDuration = 0
-    shiftDistance = 0
-    dbTreshold = 0
-    inputModel = ""
-    with open(csvSetting, mode='r') as setting:
-        csvDataSetting = csv.DictReader(setting)
-        for row in csvDataSetting:
-            splitDuration = int(row[0])
-            shiftDistance = int(row[1])
-            dbTreshold = int(row[2])
-            inputModel = row[3]
+    df = pd.read_csv(csvSetting)
+    splitDuration = df['split_duration'].iloc[0]
+    shiftDistance = df['shift_distance'].iloc[0]
+    dbTreshold = df['db_treshold'].iloc[0]
+    inputModel = df['input_model'].iloc[0]
     return splitDuration, shiftDistance, dbTreshold, inputModel
 
 def saveSettingValue(csvSetting, splitDuration, shiftDistance, dbTreshold, inputModel):
-    with open(csvSetting, mode='w') as csvDataSetting:
-        settingWriter = csv.writer(csvDataSetting, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-        settingWriter.writerow([splitDuration, shiftDistance, dbTreshold, inputModel])
+    df = pd.read_csv(csvSetting)
+    df.loc[0,'split_duration'] = splitDuration
+    df.loc[0,'shift_distance'] = shiftDistance
+    df.loc[0,'db_treshold'] = dbTreshold
+    df.loc[0,'input_model'] = inputModel
+    
+    df.to_csv(csvSetting, index=False)
+    return splitDuration, shiftDistance, dbTreshold, inputModel
 
 def settingWindow(splitDuration, shiftDistance, dbTreshold, inputModel):
-    mySettingGUI = MySettingGUI("Pengaturan Klasifikasi Kidung", "darkblue12")
+    mySettingGUI = MySettingGUI("Pengaturan Klasifikasi Kidung", "darkblue12", splitDuration, shiftDistance, dbTreshold, inputModel)
     settingWindow, settingLayout, settingSg = mySettingGUI.initialize()
     
     while True:
         settingEvent, settingValues = settingWindow.read()
-        
-        settingValues["SplitDuration"] = splitDuration
-        settingValues["ShiftDistance"] = shiftDistance
-        settingValues["DbTreshold"] = dbTreshold
-        settingValues["ModelInput"] = inputModel
-        
+        settingValues['SplitDuration'] = splitDuration
         if settingEvent == "Exit" or settingEvent == settingSg.WIN_CLOSED or settingEvent == "BatalPengaturan":
             break
         if settingEvent == "SimpanPengaturan":
-            print("settingValues['ModelInput'] : ", settingValues['ModelInput'])
-            saveSettingValue(csvSetting="setting.csv", splitDuration=settingValues['SplitDuration'],shiftDistance=settingValues['ShiftDistance'],dbTreshold=settingValues['DbTreshold'], inputModel=settingValues['ModelInput'])
+            
+            splitDuration, shiftDistance, dbTreshold, inputModel = saveSettingValue(csvSetting="setting.csv", splitDuration=settingValues['SplitDuration'],shiftDistance=settingValues['ShiftDistance'],dbTreshold=settingValues['DbTreshold'], inputModel=settingValues['ModelInput'])
             # Update Pengaturan
             settingSg.popup('Berhasil Menyimpan')
             
     settingWindow.close()
-
-def initialValue(window):
-    window["PredictedAs"].update("Predicted As  : -")
-    window["TimeClassification"].update("Timing Classification : -")
 
 def main():
     # Variabel / Parameter Input
@@ -56,7 +48,6 @@ def main():
     
     myGUI = MyGUI("Klasifikasi Kidung", "darkblue12")
     window, layout, sg = myGUI.initialize()
-    initialValue(window)
     window.Maximize()
     
     while True:
@@ -66,6 +57,7 @@ def main():
         if event == "Tentang Aplikasi":      
             sg.popup('Klasifikasi Kidung', 'Version 1.0', 'PySimpleGUI rocks...')
         if event == "Lihat Pengaturan":
+            splitDuration, shiftDistance, dbTreshold, inputModel = readSettingValue("setting.csv")
             sg.popup('Split Duration (second): {}\nShift Distance (second): {}\n dB Treshold: {}\n Input Model: {}'.format(splitDuration, shiftDistance, dbTreshold, inputModel))
         if event == "Ubah Pengaturan":
             settingWindow(splitDuration, shiftDistance, dbTreshold, inputModel)

@@ -1,2 +1,2 @@
-split_duration,shift_distance,db_treshold,input_model
-15,3,10,D:/PYTHON/klasifikasi-kidung-gui/model/defeult.pkl
+split_duration,shift_distance,db_treshold,extract_feature,input_model
+15,3,10,combine6,D:/PYTHON/klasifikasi-kidung-gui/model/defeult.pkl

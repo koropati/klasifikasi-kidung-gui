@@ -6,6 +6,7 @@ splitDuration = 0
 shiftDistance = 0
 dbTreshold = 0
 inputModel = ""
+extractFeature = ""
 
 def readSettingValue(csvSetting):
     df = pd.read_csv(csvSetting)
@@ -13,30 +14,31 @@ def readSettingValue(csvSetting):
     shiftDistance = df['shift_distance'].iloc[0]
     dbTreshold = df['db_treshold'].iloc[0]
     inputModel = df['input_model'].iloc[0]
-    return splitDuration, shiftDistance, dbTreshold, inputModel
+    extractFeature = df['extract_feature'].iloc[0]
+    return splitDuration, shiftDistance, dbTreshold, extractFeature, inputModel
 
-def saveSettingValue(csvSetting, splitDuration, shiftDistance, dbTreshold, inputModel):
+def saveSettingValue(csvSetting, splitDuration, shiftDistance, dbTreshold, extractFeature, inputModel):
     df = pd.read_csv(csvSetting)
     df.loc[0,'split_duration'] = splitDuration
     df.loc[0,'shift_distance'] = shiftDistance
     df.loc[0,'db_treshold'] = dbTreshold
+    df.loc[0,'extract_feature'] = extractFeature
     df.loc[0,'input_model'] = inputModel
     
     df.to_csv(csvSetting, index=False)
-    return splitDuration, shiftDistance, dbTreshold, inputModel
+    return splitDuration, shiftDistance, dbTreshold, extractFeature, inputModel
 
-def settingWindow(splitDuration, shiftDistance, dbTreshold, inputModel):
-    mySettingGUI = MySettingGUI("Pengaturan Klasifikasi Kidung", "darkblue12", splitDuration, shiftDistance, dbTreshold, inputModel)
+def settingWindow(splitDuration, shiftDistance, dbTreshold, extractFeature, inputModel):
+    mySettingGUI = MySettingGUI("Pengaturan Klasifikasi Kidung", "darkblue12", splitDuration, shiftDistance, dbTreshold, extractFeature, inputModel)
     settingWindow, settingLayout, settingSg = mySettingGUI.initialize()
     
     while True:
         settingEvent, settingValues = settingWindow.read()
-        settingValues['SplitDuration'] = splitDuration
         if settingEvent == "Exit" or settingEvent == settingSg.WIN_CLOSED or settingEvent == "BatalPengaturan":
             break
         if settingEvent == "SimpanPengaturan":
             
-            splitDuration, shiftDistance, dbTreshold, inputModel = saveSettingValue(csvSetting="setting.csv", splitDuration=settingValues['SplitDuration'],shiftDistance=settingValues['ShiftDistance'],dbTreshold=settingValues['DbTreshold'], inputModel=settingValues['ModelInput'])
+            splitDuration, shiftDistance, dbTreshold, extractFeature, inputModel = saveSettingValue(csvSetting="setting.csv", splitDuration=settingValues['SplitDuration'],shiftDistance=settingValues['ShiftDistance'],dbTreshold=settingValues['DbTreshold'], extractFeature=settingValues['ExtractMethod'], inputModel=settingValues['ModelInput'])
             # Update Pengaturan
             settingSg.popup('Berhasil Menyimpan')
             
@@ -44,11 +46,11 @@ def settingWindow(splitDuration, shiftDistance, dbTreshold, inputModel):
 
 def main():
     # Variabel / Parameter Input
-    splitDuration, shiftDistance, dbTreshold, inputModel = readSettingValue("setting.csv")
+    splitDuration, shiftDistance, dbTreshold, extractFeature, inputModel = readSettingValue("setting.csv")
     
     myGUI = MyGUI("Klasifikasi Kidung", "darkblue12")
     window, layout, sg = myGUI.initialize()
-    window.Maximize()
+    # window.Maximize()
     
     while True:
         event, values = window.read()
@@ -57,10 +59,10 @@ def main():
         if event == "Tentang Aplikasi":      
             sg.popup('Klasifikasi Kidung', 'Version 1.0', 'PySimpleGUI rocks...')
         if event == "Lihat Pengaturan":
-            splitDuration, shiftDistance, dbTreshold, inputModel = readSettingValue("setting.csv")
-            sg.popup('Split Duration (second): {}\nShift Distance (second): {}\n dB Treshold: {}\n Input Model: {}'.format(splitDuration, shiftDistance, dbTreshold, inputModel))
+            splitDuration, shiftDistance, dbTreshold, extractFeature, inputModel = readSettingValue("setting.csv")
+            sg.popup('Split Duration (second): {}\nShift Distance (second): {}\n dB Treshold: {}\nExtract Feature Method: {}\n Input Model: {}'.format(splitDuration, shiftDistance, dbTreshold, extractFeature, inputModel))
         if event == "Ubah Pengaturan":
-            settingWindow(splitDuration, shiftDistance, dbTreshold, inputModel)
+            settingWindow(splitDuration, shiftDistance, dbTreshold, extractFeature, inputModel)
             
     
     window.close()

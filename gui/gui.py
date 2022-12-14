@@ -16,9 +16,9 @@ class MyGUI(object):
         main = [
             [sg.Column([[sg.Text("PREDIKSI DATA")]], justification='c')],
             [sg.HorizontalSeparator(), ],
-            [sg.Text("Buka File Audio:"), sg.In(size=(50, 1), enable_events=True, key="AudioInput"), sg.FolderBrowse(),],
+            [sg.Text("Buka File Audio:"), sg.In(size=(50, 1), enable_events=True, key="AudioInput"), sg.FileBrowse(file_types=(("Audio Files", "*.wav"),)),],
             [sg.Text("")],
-            [sg.Column([[sg.Button("Mulai Prediksi", key='MulaiPrediksi', s=20, font=('Helvetica', 14), button_color = ('black','green'))]], justification='c')],
+            [sg.Column([[sg.Button("Stop/Clear Prediksi", key='StopPrediksi', s=20, font=('Helvetica', 14), button_color = ('black','red')), sg.Button("Mulai Prediksi", key='MulaiPrediksi', s=20, font=('Helvetica', 14), button_color = ('black','green'))]], justification='c')],
             [sg.Text("")],
             [sg.HorizontalSeparator(), ],
             [sg.Column([[sg.Text("HASIL PREDIKSI")]], justification='c')],

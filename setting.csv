@@ -1,2 +1,2 @@
 split_duration,shift_distance,db_treshold,extract_feature,input_model
-15,3,10,combine6,D:/PYTHON/klasifikasi-kidung-gui/model/defeult.pkl
+5,2,10,hog2,D:/PYTHON/klasifikasi-kidung/model-data/model_fitur_hog2.pkl

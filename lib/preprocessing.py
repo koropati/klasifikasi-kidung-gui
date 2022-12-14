@@ -12,7 +12,7 @@ class CleanAudio(object):
         self.dbTreshold = dbTreshold
         self.duration = duration  # in second
         self.shiftDistance = shiftDistance  # in second
-        self.className = audioInputPath.split("\\")[-1].split(".")[0]
+        self.className = audioInputPath.split("/")[-1].split(".")[0]
         self.counterLabel = 1
         self.bufferTimeDuration = self.duration * self.sr # set panjang music = durasi (detik) X sample rate (Hz)
         self.bufferSiftDistance = self.shiftDistance * self.sr # set panjang sift distance = durasi (detik) X sample rate (Hz)

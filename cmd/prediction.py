@@ -21,7 +21,7 @@ from lib.mode import Mode
 from lib.csv import appendListAsRow, readCSVFloat
 
 class Prediction(object):
-    def __init__(self, oudioInput, dbTreshold, splitDuration, shiftDistanceDuration, typeExtractFeature, model):
+    def __init__(self, uuidProcess, oudioInput, dbTreshold, splitDuration, shiftDistanceDuration, typeExtractFeature, model):
         self.fileName, self.fileExtensionInput = os.path.splitext(oudioInput)
         self.fileNameInput = self.fileName.rsplit('/', 1)[-1]
         self.audio, self.sr = librosa.load(oudioInput, sr=8000, mono=True)
@@ -33,7 +33,10 @@ class Prediction(object):
         self.bufferTimeDuration = self.splitDuration * self.sr # set panjang music = durasi (detik) X sample rate (Hz)
         self.bufferSiftDistance = self.shiftDistanceDuration * self.sr # set panjang sift distance = durasi (detik) X sample rate (Hz)
         self.model = model #model file .pkl
-        self.processID = str(uuid.uuid4())
+        if uuidProcess == "":
+            self.processID = str(uuid.uuid4())
+        else:
+            self.processID = uuidProcess
         
         self.folderAudioInput = "audio/input/" + self.processID + "/"
         self.folderAudioInputCleanSplit = "audio/clean-split/" + self.processID + "/"
@@ -42,9 +45,10 @@ class Prediction(object):
         self.folderMode = "data/mode/" + self.processID + "/"
         self.folderPredicted = "data/predicted/" + self.processID + "/"
         self.folderVector = "data/vector/" + self.processID + "/"
+        
+        self.fileInputTemp = self.folderAudioInput+self.fileNameInput+self.fileExtensionInput
     
     def createSpectogram(self, src, dst, extension):
-        print("[CREATING SPECTOGRAM]")
         if not os.path.exists(dst):
             os.makedirs(dst)
 
@@ -70,7 +74,6 @@ class Prediction(object):
         print("Done!")
     
     def cropSpectogram(self, src, dst, extension):
-        print("[CROPPING SPECTOGRAM]")
         if not os.path.exists(dst):
             os.makedirs(dst)
 
@@ -96,7 +99,6 @@ class Prediction(object):
         print("Done!")
     
     def generateCSVFeature(self, src, dst, methodFeature):
-        print("[EXTRACTING FEATURE]")
         nameFileOut = self.folderVector + methodFeature + ".csv"
         if not os.path.exists(dst):
             os.makedirs(dst)
@@ -197,7 +199,7 @@ class Prediction(object):
         result = model.predict(dfFeature)
         finalResult = result.T
         pd.DataFrame(finalResult).to_csv(dst, header=False, index=False)
-        print("RESULT: ", finalResult)
+        # print("RESULT: ", finalResult)
     
     def calculateMode(self, dst):
         csvInput = self.folderMode + self.typeExtractFeature + ".csv"
@@ -205,11 +207,11 @@ class Prediction(object):
             print("File : {} NOT EXIST".format(csvInput))
             sys.exit()
         myMode = Mode(csvInput)
-        winner, modeDictionary = myMode.calculate()
+        winner, winnerAccuracy, detailText, modeDictionary = myMode.calculate()
         dfMode = pd.DataFrame(modeDictionary)
         dfMode.to_excel(dst)
-        print("Adudio predicted As: ",winner)
-        return winner, modeDictionary
+        # print("Adudio predicted As: ",winner)
+        return winner, winnerAccuracy, detailText, modeDictionary
         
         
     def predict(self):
@@ -241,26 +243,31 @@ class Prediction(object):
         
         # Cleaning Audio
         print("[CLEANING AUDIO]")
-        audioClean = CleanAudio(self.oudioInput, self.folderAudioInputCleanSplit, self.dbTreshold, self.splitDuration, self.shiftDistanceDuration)
+        audioClean = CleanAudio(self.fileInputTemp, self.folderAudioInputCleanSplit, self.dbTreshold, self.splitDuration, self.shiftDistanceDuration)
         audioClean.extract()
         # End Cleaning Audio
         
         # Create Spectogram
+        print("[CREATING SPECTOGRAM]")
         self.createSpectogram(self.folderAudioInputCleanSplit, self.folderSpectogram, "png")
         # End Create Spectogram
         
         # Crop Spectogram
+        print("[CROPPING SPECTOGRAM]")
         self.cropSpectogram(self.folderSpectogram, self.folderSpectogramCrop, "png")
         # End Croping Spectogram
         
         # Create Feature Extraction
+        print("[EXTRACTING FEATURE]")
         self.generateCSVFeature(self.folderSpectogramCrop, self.folderVector, self.typeExtractFeature)
         # End Create Feature Extraction
         
         # Predicting All row in Feature Extraction
+        print("[PREDICTION VECTOR]")
         self.predictionVectorCSV(self.folderMode+self.typeExtractFeature+".csv")
         # End Predicting All row in Feature Extraction
         
         # Calculate Modus in csv data predicted
+        print("[CALCULATE MODE]")
         return self.calculateMode(self.folderPredicted+self.typeExtractFeature+".xlsx")
         # Calculate Modus in csv data predicted

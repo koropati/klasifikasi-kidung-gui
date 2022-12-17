@@ -16,52 +16,47 @@ class MyGUI(object):
         main = [
             [sg.Column([[sg.Text("PREDIKSI DATA")]], justification='c')],
             [sg.HorizontalSeparator(), ],
-            [sg.Text("Buka File Audio:"), sg.In(size=(50, 1), enable_events=True, key="AudioInput"), sg.FileBrowse(file_types=(("Audio Files", "*.wav"),)),],
+            [sg.Column([[sg.Text("Buka File Audio:", font=('Helvetica', 12)), sg.In(size=(35, 1), enable_events=True, key="AudioInput", font=('Helvetica', 12), disabled=True), sg.FileBrowse(file_types=(("Audio Files", "*.wav"),),s=8, font=('Helvetica', 12)),]], justification='c')],
             [sg.Text("")],
-            [sg.Column([[sg.Button("Stop/Clear Prediksi", key='StopPrediksi', s=20, font=('Helvetica', 14), button_color = ('black','red')), sg.Button("Mulai Prediksi", key='MulaiPrediksi', s=20, font=('Helvetica', 14), button_color = ('black','green'))]], justification='c')],
+            [sg.Column([[sg.Button("Clear Prediksi", key='StopPrediksi', s=20, font=('Helvetica', 14), button_color = ('black','white'), disabled=True), sg.Button("Mulai Prediksi", key='MulaiPrediksi', s=20, font=('Helvetica', 14), button_color = ('black','green'))]], justification='c')],
             [sg.Text("")],
             [sg.HorizontalSeparator(), ],
             [sg.Column([[sg.Text("HASIL PREDIKSI")]], justification='c')],
             [sg.HorizontalSeparator(), ],
             [sg.HorizontalSeparator(), ],
             [sg.Text("")],
-            [sg.T('ID Proses: ', s=25, justification='l'), sg.InputText(key='ProcessID', disabled=True, default_text='-')],
-            [sg.T('Terprediksi Sebagai Kidung: ', s=25, justification='l'), sg.InputText(key='PredictedAs', disabled=True, default_text='-')],
-            [sg.T('Waktu Prediksi: ', s=25, justification='l'), sg.InputText(key='TimeClassification', disabled=True, default_text=0)],
-            [sg.T('Akurasi: ', s=25, justification='l'), sg.InputText(key='PredictedAcuration', disabled=True, default_text=0)],
+            [sg.T('ID Proses: ', s=25, justification='l' ,font=('Helvetica', 12)), sg.InputText(key='ProcessID', disabled=True, default_text='-', font=('Helvetica', 12), size=(35, 1))],
+            [sg.T('Terprediksi Sebagai Kidung: ', s=25, justification='l', font=('Helvetica', 12)), sg.InputText(key='PredictedAs', disabled=True, default_text='-', font=('Helvetica', 12), size=(35, 1))],
+            [sg.T('Waktu Prediksi: ', s=25, justification='l', font=('Helvetica', 12)), sg.InputText(key='TimeClassification', disabled=True, default_text=0, font=('Helvetica', 12), size=(35, 1))],
+            [sg.T('Akurasi: ', s=25, justification='l', font=('Helvetica', 12)), sg.InputText(key='PredictedAcuration', disabled=True, default_text=0, font=('Helvetica', 12), size=(35, 1))],
             [sg.HorizontalSeparator(), ],
             [sg.Column([[sg.Text("DETAIL PREDIKSI")]], justification='c')],
-            [sg.Multiline(size=(75, 5), key='DetailResult')],         
+            [sg.Column([[sg.Multiline(size=(75, 5), key='DetailResult', disabled=True,)]], justification='c')],       
         ]
+        
         result = [
             [sg.Column([[sg.Text("FINAL SPECTOGRAM IMAGE LIST")]], justification='c')],
             [sg.HorizontalSeparator(), ],
-            [sg.Listbox(values=[], enable_events=True, size=(50, 25), key="ListImageSpectogram"), ]
-        ]
-        
-        imagePreview = [
+            [sg.Column([[sg.Listbox(values=[], enable_events=True, size=(52, 10), key="ListImageSpectogram")]], justification='c')],
             [sg.Column([[sg.Text("IMAGE PREVIEW")]], justification='c')],
             [sg.HorizontalSeparator(), ],
-            [sg.Column([[sg.Image(size=(300, 300), key='ImagePreview')]], justification='c')],
+            [sg.Column([[sg.Image(size=(200, 200), key='ImagePreview')]], justification='c')],
         ]
         
-        logData = [
+        lyricData = [
+            [sg.Column([[sg.Text("LIRIK KIDUNG")]], justification='c')],
             [sg.HorizontalSeparator(), ],
-            [sg.Column([[sg.Text("LOG PROCESS")]], justification='c')],
-            [sg.HorizontalSeparator(), ],
-            [sg.Column([[sg.Listbox(values=[], enable_events=True, size=(180, 5), key="LogData")]], justification='c')],
-            [sg.HorizontalSeparator(), ],
+            [sg.Column([[sg.Multiline(size=(38, 28), disabled=True, key="lyricData")]], justification='c')],
             ]
         
         layout = [[
             menuHeader,
             sg.vtop(sg.Column(main)),
             sg.VSeperator(),
-            sg.vtop(sg.Column(result)),
+            sg.vtop(sg.Column(lyricData)),
             sg.VSeperator(),
-            sg.vtop(sg.Column(imagePreview)),
-            ],
-            logData,]
+            sg.vtop(sg.Column(result)),
+            ]]
         return layout
     
     def initialize(self):

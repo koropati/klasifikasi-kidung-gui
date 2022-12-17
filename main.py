@@ -4,7 +4,7 @@ from helper.delete import deleteLogFile
 import csv
 import pandas as pd
 import uuid
-import os
+import os, re
 import time as waktu
 
 splitDuration = 0
@@ -16,6 +16,9 @@ uuidProcess = ""
 listImageSpectogram = []
 pathImageSpectogram = ""
 folderModel = "model/"
+folderLyric = "lyrics/"
+pathLyric = ""
+isProcessing = False
 
 def readSettingValue(csvSetting):
     df = pd.read_csv(csvSetting)
@@ -73,43 +76,67 @@ def main():
         if event == "Exit" or event == sg.WIN_CLOSED:
             break
         if event == "Tentang Aplikasi":      
-            sg.popup('Klasifikasi Kidung', 'Version 1.0', 'PySimpleGUI rocks...')
+            sg.popup("Klasifikasi Kidung\nGUI Version 1.0\nAyu Ditha Savitri \nNIM: ", title='Tentang Aplikasi')
         if event == "Lihat Pengaturan":
             splitDuration, shiftDistance, dbTreshold, extractFeature, inputModel = readSettingValue("setting.csv")
-            sg.popup('Split Duration (second): {}\nShift Distance (second): {}\n dB Treshold: {}\nExtract Feature Method: {}\n Input Model: {}'.format(splitDuration, shiftDistance, dbTreshold, extractFeature, inputModel))
+            sg.popup('Split Duration (second): {}\nShift Distance (second): {}\ndB Treshold: {}\nExtract Feature Method: {}\nInput Model: {}'.format(splitDuration, shiftDistance, dbTreshold, extractFeature, inputModel), title='Pengaturan Klasifikasi')
         if event == "Ubah Pengaturan":
             settingWindow(splitDuration, shiftDistance, dbTreshold, extractFeature, inputModel)
-        if event == "MulaiPrediksi":
             
+        if event == "MulaiPrediksi":
+            isProcessing = True
             audioInput = values['AudioInput']
             uuidProcess = str(uuid.uuid4())
             pathImageSpectogram = "img/spectogram-crop/" + uuidProcess + "/"
             if inputModel == "" or extractFeature == "" or splitDuration == 0 or shiftDistance == 0 or dbTreshold == 0 :
-                sg.popup("Kesalahan", "Data Pengaturan masih kosong atau ada data yang tidak valid", "Silahkan cek dan ubah pengaturan pada menu penagturan", "Terimakasih!")
+                isProcessing = False
+                sg.popup("Data Pengaturan masih kosong atau ada data yang tidak valid", "Silahkan cek dan ubah pengaturan pada menu penagturan", "Terimakasih!", title='Kesalahan')
             elif audioInput == "":
-                sg.popup("Kesalahan", "Input Audio Terlebih Dahulu", "Terimakasih!")
+                isProcessing = False
+                sg.popup("Input Audio Terlebih Dahulu", "Terimakasih!", title='Kesalahan')
             elif os.path.isfile(inputModel) == False:
-                sg.popup("Kesalahan", "Data Model Tidak Ditemukan", "Silahkan ubah pengaturan pada file model input!")
+                isProcessing = False
+                sg.popup("Data Model Tidak Ditemukan", "Silahkan ubah pengaturan pada file model input!", title='Kesalahan')
             elif os.path.isfile(audioInput) == False:
-                sg.popup("Kesalahan", "Data Audio Tidak Ditemukan", "Silahkan input audio yang akan di prediksi!")
+                isProcessing = False
+                sg.popup("Data Audio Tidak Ditemukan", "Silahkan input audio yang akan di prediksi!", title='Kesalahan')
             else:
                 try:
+                    window['MulaiPrediksi'].update("Processing...", button_color = ('black','white'), disabled=isProcessing)
+
                     window['ProcessID'].Update(uuidProcess)
+                    
+                    # Mulai Prediksi
                     waktuMulai = waktu.time()
                     MyPrediction = Prediction(uuidProcess, audioInput, dbTreshold, splitDuration, shiftDistance, extractFeature, inputModel)
                     winner, winnerAccuracy, detailText, modeDictionary = MyPrediction.predict()
                     waktuBerhenti = waktu.time()
+                    isProcessing = False
+                    # Selesai Prediksi
                     
-                    window['PredictedAs'].Update(winner)
+                    # Update path lyric
+                    pathLyric = folderLyric + winner + ".txt"
+                    fileLyric = open(pathLyric, "r")
+                    dataLyric = fileLyric.read()
+                    fileLyric.close()
+                    
+                    # Menampilkan Hasil Prediksi
+                    window['PredictedAs'].Update(re.sub(r"(\w)([A-Z])", r"\1 \2", winner))
                     window['PredictedAcuration'].Update(winnerAccuracy)
                     window['DetailResult'].Update(detailText)
                     window['TimeClassification'].Update(f"{waktuBerhenti - waktuMulai:0.5f} Detik")
                     listImageSpectogram = readFolderFileList(pathImageSpectogram)
                     window['ListImageSpectogram'].update(listImageSpectogram)
+                    window['lyricData'].update(dataLyric)
                     
-                    sg.popup("Selesai Melakukan Prediksi", "Terprediksi Sebagai : " + winner)
+                    sg.popup("Selesai Melakukan Prediksi, Terprediksi Sebagai : " + winner, title='Sukses')
                 except:
-                    sg.popup("Terjadi Kesalahan", "Pada Sistem silahkan cek log data", "Terimakasih!")
+                    sg.popup("Terjadi Kesalahan Pada Sistem silahkan cek log data!. Terimakasih!", title='Kesalahan')
+                finally:
+                    # Aktifkan / Non aktifkan Tombol
+                    window['MulaiPrediksi'].update("Mulai Prediksi",button_color = ('black','green'), disabled=isProcessing)
+                    window['StopPrediksi'].update(button_color = ('black','red'), disabled=False)
+                    
         if event == "ListImageSpectogram":
             selection = values[event]
             if selection:
@@ -126,9 +153,13 @@ def main():
                     window['PredictedAcuration'].Update("0")
                     window['DetailResult'].Update("")
                     window['ListImageSpectogram'].update("")
-                    sg.popup("Sukses Membersihkan Prediksi", "Data prediksi lama telah di hapus")
+                    window['ImagePreview'].update("")
+                    window['AudioInput'].update("")
+                    window['lyricData'].update("")
+                    window['StopPrediksi'].update(button_color = ('black','white'), disabled=True)
+                    sg.popup("Sukses Membersihkan Prediksi, Data prediksi lama telah di hapus", title='Sukses')
             except:
-                sg.popup("Terjadi Kesalahan", "Pada Sistem silahkan cek log data", "Terimakasih!")
+                sg.popup("Terjadi Kesalahan, Pada Sistem silahkan cek log data", "Terimakasih!", title='Kesalahan')
     
     window.close()
 
